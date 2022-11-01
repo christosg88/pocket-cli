@@ -52,7 +52,7 @@ class PocketItem:
 class Pocket:
     POCKET_ACCESS_TOKEN_FILE = Path.home() / ".pocket"
     # you get this from Pocket after creating a new app
-    CONSUMER_KEY = "104362-fe712b17b87c8538d6008db"
+    CONSUMER_KEY = "104395-a466587cb5dfff975b68a80"
     REDIRECT_URI = "http://example.com/"
 
     valid_commands = {
