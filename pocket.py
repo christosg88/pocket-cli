@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from pprint import pformat
 from tabulate import tabulate
@@ -61,6 +61,8 @@ class Pocket:
         "vd": "[vd] <index>",
         "u": "[u]pdate",
         "s": "[s]tatistics",
+        "t": "[t]oggle",
+        "r": "[r]everse",
         "q": "[q]uit",
     }
 
@@ -69,6 +71,8 @@ class Pocket:
         self.username = None
         self.since = "0"
         self.items = dict()
+        self.__display_type = 0
+        self._reverse = False
 
     def authenticate(self):
         self.access_token, self.username = self.__get_access_token_and_username()
@@ -88,6 +92,12 @@ class Pocket:
                 self.__display()
             elif cmd == "s":
                 self.__show_statistics()
+            elif cmd == "t":
+                self.__display_type = 1 - self.__display_type
+                self.__display()
+            elif cmd == "r":
+                self._reverse = not self._reverse
+                self.__display()
             else:
                 idx = int(tokens[1])
 
@@ -193,7 +203,7 @@ class Pocket:
 
             return tokens
 
-    def __display(self):
+    def __display_grouped(self):
         # split into groups of 5 minutes increment
         groups = defaultdict(list)
         for data in self.items.values():
@@ -218,7 +228,7 @@ class Pocket:
                             item.domain_name,
                             item.get_given_title(),
                             item.get_given_url(),
-                            date.fromtimestamp(item.time_added),
+                            datetime.fromtimestamp(item.time_added),
                             item.time_to_read,
                             item.word_count,
                         )
@@ -236,6 +246,51 @@ class Pocket:
                 )
             )
             print()
+
+    def __display_ungrouped(self):
+        idx = 1
+        for item in sorted(
+            self.items.values(),
+            key=lambda item: int(item.time_added),
+            reverse=self._reverse,
+        ):
+            item.sort_idx = idx
+            idx += 1
+        print(
+            tabulate(
+                (
+                    (
+                        item.sort_idx,
+                        item.domain_name,
+                        item.get_given_title(),
+                        item.get_given_url(),
+                        datetime.fromtimestamp(item.time_added),
+                        item.time_to_read,
+                        item.word_count,
+                    )
+                    for item in sorted(
+                        self.items.values(),
+                        key=lambda item: item.sort_idx,
+                        reverse=True,
+                    )
+                ),
+                headers=(
+                    "Index",
+                    "Domain Name",
+                    "Title",
+                    "URL",
+                    "Added",
+                    "Time to Read",
+                    "Word Count",
+                ),
+            )
+        )
+
+    def __display(self):
+        if self.__display_type == 0:
+            self.__display_grouped()
+        else:
+            self.__display_ungrouped()
 
     def __show_statistics(self):
         word_count_per_group = defaultdict(list)
@@ -262,7 +317,7 @@ class Pocket:
             print(f"time to read: {timedelta(minutes=num_min_to_read)}")
             print()
 
-        print("=" * 5 + f" TOTAL " + "=" * 5)
+        print("=" * 5 + " TOTAL " + "=" * 5)
         print(f"#items: {num_tot_items}")
         print(f"time to read: {timedelta(minutes=num_tot_min_to_read)}")
         print()
@@ -331,16 +386,14 @@ class Pocket:
 
         r_json = self.__send_request("v3/get", data)
 
-        if "list" not in r_json.keys():
-            print(
-                f"Nothing new since {date.fromtimestamp(self.since)} until {date.fromtimestamp(r_json['since'])}"
-            )
-            self.since = r_json["since"]
+        self.since = r_json["since"]
+
+        if not r_json["list"]:
             return
 
         for item_id, data in r_json["list"].items():
-            if item_id in self.items.keys():
-                if data["status"] == "2":
+            if data["status"] == "2":
+                if item_id in self.items.keys():
                     del self.items[item_id]
                 continue
 
