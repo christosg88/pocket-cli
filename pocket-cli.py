@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-from pocket import Pocket
+from pocket_comm import Pocket
+from pocket_prompt import PocketPrompt
 
 if __name__ == "__main__":
     pocket = Pocket()
     pocket.authenticate()
-    pocket.prompt()
+    prompt = PocketPrompt(pocket)
+    prompt.prompt()
