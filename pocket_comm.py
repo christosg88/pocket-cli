@@ -51,7 +51,6 @@ class Pocket:
     def __init__(self):
         self.access_token = None
         self.username = None
-        self.since = "0"
         self.items = dict()
 
     def authenticate(self):
@@ -165,8 +164,6 @@ class Pocket:
             data["domain"] = domain
         if since:
             data["since"] = since
-        else:
-            data["since"] = self.since
         if count:
             if int(count) < 1:
                 raise RuntimeError(f"Invalid option {count=} (valid options: > 0)")
@@ -178,16 +175,11 @@ class Pocket:
 
         r_json = self.send_request("v3/get", data)
 
-        self.since = r_json["since"]
-
         if not r_json["list"]:
             return
 
         items = dict()
         for item_id, data in r_json["list"].items():
-            if data["status"] == "2":
-                continue
-
             items[item_id] = PocketItem(
                 item_id,
                 data.get("domain_metadata", {}).get("name", "N/A"),

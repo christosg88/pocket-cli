@@ -13,26 +13,49 @@ class PocketPrompt:
         "vd": "[vd] <index>",
         "u": "[u]pdate",
         "f": "[f]ilter",
+        "s": "[s]ort",
         "q": "[q]uit",
     }
 
     def __init__(self, pocket: Pocket):
         self.pocket: Pocket = pocket
         self.items: dict[str, PocketItem] = None
+        self.sort_by = 1
 
     def update(self):
         new_items = self.pocket.retrieve()
         if new_items is not None:
             self.items = new_items
 
-    def display(self):
+    def sort_by_time_added(self, reverse=False) -> None:
         idx = 1
-        for k, v in sorted(self.items.items()):
-            v.sort_idx = idx
+        for item in sorted(
+            self.items.values(), key=lambda item: item.time_added, reverse=reverse
+        ):
+            item.sort_idx = idx
             idx += 1
 
+    def sort_by_time_to_read(self, reverse=False) -> None:
+        idx = 1
+        for item in sorted(
+            self.items.values(), key=lambda item: item.time_to_read, reverse=reverse
+        ):
+            item.sort_idx = idx
+            idx += 1
+
+    def display(self):
+        match self.sort_by:
+            case 1:
+                self.sort_by_time_added()
+            case 2:
+                self.sort_by_time_added(reverse=True)
+            case 3:
+                self.sort_by_time_to_read()
+            case 4:
+                self.sort_by_time_to_read(reverse=True)
+
         to_print = tabulate(
-            (
+            [
                 (
                     item.sort_idx,
                     item.domain_name,
@@ -45,7 +68,7 @@ class PocketPrompt:
                 for item in sorted(
                     self.items.values(), key=lambda item: item.sort_idx, reverse=True
                 )
-            ),
+            ],
             headers=(
                 "Index",
                 "Domain Name",
@@ -70,9 +93,15 @@ class PocketPrompt:
             groups.add(item.time_to_read // 5)
 
         groups = list(sorted(groups))
-        for idx, group in enumerate(groups, 1):
-            print(f"{idx}: {group * 5}–{(group + 1)*5}")
-        group_idx = int(input("> "))
+        while True:
+            try:
+                for idx, group in enumerate(groups, 1):
+                    print(f"{idx}: {group * 5}–{(group + 1)*5} minutes")
+                group_idx = int(input("> "))
+                if 1 <= group_idx <= len(groups):
+                    break
+            except ValueError:
+                pass
 
         min_time_to_read = groups[group_idx - 1] * 5
         max_time_to_read = (groups[group_idx - 1] + 1) * 5
@@ -81,10 +110,24 @@ class PocketPrompt:
             filter(
                 lambda pair: min_time_to_read
                 <= pair[1].time_to_read
-                <= max_time_to_read,
+                < max_time_to_read,
                 self.items.items(),
             )
         )
+
+    def prompt_sort(self) -> None:
+        while True:
+            try:
+                print("1: Oldest to Newest")
+                print("2: Newest to Oldest")
+                print("3: Shortest to Longest")
+                print("4: Longest to Shortest")
+                idx = int(input("> "))
+                if 1 <= idx <= 4:
+                    break
+            except ValueError:
+                pass
+        self.sort_by = idx
 
     def get_cmd_and_idx(self):
         while True:
@@ -96,7 +139,7 @@ class PocketPrompt:
                 continue
             if tokens[0] not in PocketPrompt.valid_commands.keys():
                 continue
-            if tokens[0] in ("u", "q", "s", "f") and len(tokens) != 1:
+            if tokens[0] in ("q", "u", "f", "s") and len(tokens) != 1:
                 continue
             if tokens[0] in ("v", "d", "vd") and len(tokens) != 2:
                 continue
@@ -119,8 +162,11 @@ class PocketPrompt:
                     self.display()
                     continue
                 case "f":
-                    self.update()
                     self.prompt_filter()
+                    self.display()
+                    continue
+                case "s":
+                    self.prompt_sort()
                     self.display()
                     continue
                 case _:
