@@ -10,8 +10,14 @@ to allow `pocket-cli` to access your Pocket list.
 After you have authorized `pocket-cli` to access your list, it will store your access token into `~/.pocket` for future
 use.
 
-Through `pocket-cli`'s prompt, you can `[v]iew` an item, `[d]elete` an item or `[vd]` (view and delete) an item at the
-same time.
+Through `pocket-cli`'s prompt, you can:
+
+* `[v]iew` an item
+* `[d]elete` an item
+* `[vd]` (view and delete) an item at the same time
+* `[f]ilter` the items based on reading time or time added
+* `[s]ort` the items based on reading time or time added
+* `[t]ag` the items with the needed time to read
 
 Viewing an item will open the link to your default browser through `xdg-open`.
 
@@ -43,64 +49,51 @@ like to perform.
 Here's a truncated example using my list:
 
 ```
-     25  Ars Technica   Won’t somebody please think of the        https://arstechnica.com/?p=1913921        2023-02-05 09:51:08               2           482
-                        insects?!
-     24  Ars Technica   New data illustrates time’s effect on     https://arstechnica.com/?p=1914056        2023-02-05 09:51:21               2           470
-                        hard drive failure rates
-     23  Ars Technica   Musk locks his Twitter account to         https://arstechnica.com/?p=1914026        2023-02-05 09:52:18               4           815
-                        personally test reported malfunction
-     22  Ars Technica   Apple’s focus on secrecy violated         https://arstechnica.com/?p=1913818        2023-02-05 10:02:18               2           496
-                        employee rights, US regulators find
-     21  Ars Technica   US still has the worst, most expensive    https://arstechnica.com/?p=1913812        2023-02-05 10:02:33               4           839
-                        health care of any high-income count
-     20  Ars Technica   How to tell if your cats are playing or   https://arstechnica.com/?p=1913275        2023-02-05 10:02:42               4           922
-                        fighting—and whether it’s a problem
-     19  Ars Technica   GitHub says hackers cloned code-signing   https://arstechnica.com/?p=1913534        2023-01-31 13:37:45               2           447
-                        certificates in breached repository
-     18  Ars Technica   MusicLM: Google AI generates music in     https://arstechnica.com/?p=1913289        2023-01-31 13:37:39               3           634
-                        various genres at 24 kHz
-     17  Ars Technica   Man wanted for attempted murder is using  https://arstechnica.com/?p=1913479        2023-01-31 13:37:04               3           747
-                        dating apps while on the run, cops
-     16  Ars Technica   Charter settles with family of murder     https://arstechnica.com/?p=1913433        2023-01-31 13:36:58               3           700
-                        victim, says insurance will cover it
-     15  Ars Technica   COVID is still a global health            https://arstechnica.com/?p=1913458        2023-01-31 13:36:55               3           620
-                        emergency, but end may be near, WHO says
-     14  Ars Technica   Massive Yandex code leak reveals Russian  https://arstechnica.com/?p=1913325        2023-01-31 13:36:36               3           553
-                        search engine’s ranking factors
-     13  Ars Technica   Renault and Nissan hammer out historic    https://arstechnica.com/?p=1913381        2023-01-31 13:36:18               4           788
-                        deal to salvage alliance
-     12  France 24      Raising retirement age to 64 'is now      https://www.france24.com/en/europe/20230  2023-01-31 13:39:06               2           470
-                        non-negotiable' says French PM Borne a    129-france-s-legal-retirement-age-is-
-                                                                  now-non-negotiable-says-pm-borne-as-
-                                                                  strikes-loom
-     11  Ars Technica   DirecTV dumps Newsmax instead of paying   https://arstechnica.com/?p=1912543        2023-01-26 16:05:17               4           829
-                        new fee, drawing Republican outrage
-     10  Ars Technica   RNC sued Google for filtering spam but    https://arstechnica.com/?p=1912471        2023-01-26 16:04:48               3           574
-                        never used Gmail tool that bypasses
-      9  Ars Technica   Manchin writes bill to stop temporary     https://arstechnica.com/?p=1912422        2023-01-26 16:04:01               3           591
-                        electric vehicle tax credits
-      8  briankrebs     Administrator of RSOCKS Proxy Botnet      https://krebsonsecurity.com/2023/01/admi  2023-01-25 12:22:22               3           696
-                        Pleads Guilty                             nistrator-of-rsocks-proxy-botnet-pleads-
-                                                                  guilty/
-      7  Ars Technica   For Facebook addicts, clicking is more    https://arstechnica.com/?p=1911786        2023-01-24 10:08:38               4           895
-                        important than facts or ideology
-      6  Ars Technica   Archaeologists discovered a new papyrus   https://arstechnica.com/?p=1911466        2023-01-22 10:49:22               3           735
-                        of Egyptian Book of the Dead
-      5  Ars Technica   Twitter retroactively changes developer   https://arstechnica.com/?p=1911442        2023-01-21 19:34:20               2           455
-                        agreement to ban third-party client
-      4  Ars Technica   Musk oversaw staged Tesla self-driving    https://arstechnica.com/?p=1911445        2023-01-21 19:34:25               3           645
-                        video, emails show
-      3  briankrebs     New T-Mobile Breach Affects 37 Million    https://krebsonsecurity.com/2023/01/new-  2023-01-24 10:13:18               4           944
-                        Accounts                                  t-mobile-breach-affects-37-million-
-                                                                  accounts/
-      2  Ars Technica   Microsoft to lay off 10,000 workers,      https://arstechnica.com/?p=1910849        2023-01-20 09:47:15               3           630
-                        blames decelerated customer spending
-      1  Ars Technica   Trump tries to get back on Facebook,      https://arstechnica.com/?p=1910774        2023-01-20 09:47:29               4           785
-                        claims ban is electoral “interference”
--------  -------------  ----------------------------------------  ----------------------------------------  -------------------  --------------  ------------
-  Index  Domain Name    Title                                     URL                                       Added                  Time to Read    Word Count
+     20  Ars Technica    US government slams Musk in court filing  https://arstechnica.com/?p=1967364        2023-09-12 21:44:10              11          2404
+                         describing “chaotic environment” a
+     19  Ars Technica    For the first time, research reveals      https://arstechnica.com/?p=1967439        2023-09-13 22:56:04               8          1775
+                         crows use statistical logic
+     18  Ars Technica    What would it take to build a self-       https://arstechnica.com/?p=1967156        2023-09-13 22:56:34              18          3810
+                         sustaining astronaut ecosystem on Mars?
+     17  Ars Technica    Google quietly corrects previously        https://arstechnica.com/?p=1971345        2023-09-27 08:26:27               2           465
+                         submitted disclosure for critical webp 0
+     16  Ars Technica    GPUs from all major suppliers are         https://arstechnica.com/?p=1971213        2023-09-27 08:28:09              11          2282
+                         vulnerable to new pixel-stealing attack
+     15  Ars Technica    Can you melt eggs? Quora’s AI says        https://arstechnica.com/?p=1971106        2023-09-27 08:28:32               3           729
+                         “yes,” and Google is sharing the result
+     14  Ars Technica    Musk’s X spreads more disinformation      https://arstechnica.com/?p=1971598        2023-09-27 23:27:26               7          1449
+                         than rival social networks, EU says
+     13  Ars Technica    Backdoored firmware lets China state      https://arstechnica.com/?p=1971587        2023-09-27 23:27:58               7          1459
+                         hackers control routers with “magic pa
+     12  Ars Technica    Einstein right again: Antimatter falls    https://arstechnica.com/?p=1971331        2023-09-27 23:28:52               7          1580
+                         “down” due to gravity like ordinary
+     11  Ars Technica    How climate change could make fungal      https://arstechnica.com/?p=1971382        2023-09-27 23:29:04              13          2748
+                         diseases worse
+     10  Ars Technica    We try out the first legal level 3        https://arstechnica.com/?p=1971280        2023-09-27 23:29:12               7          1530
+                         automated driving system in the US
+      9  Ars Technica    “Yeah, they’re gone”: Musk confirms cuts  https://arstechnica.com/?p=1971902        2023-09-28 20:54:16               3           742
+                         to X’s election integrity team
+      8  Ars Technica    Reddit blocks opting out of personalized  https://arstechnica.com/?p=1971837        2023-09-28 20:54:21               4           792
+                         ads, starts paying users
+      7  Ars Technica    AI is getting better at hurricane         https://arstechnica.com/?p=1971778        2023-09-28 20:55:24               8          1752
+                         forecasting
+      6  Ars Technica    Our 10-point scale will help you rate     https://arstechnica.com/?p=1970465        2023-09-28 20:55:33              13          2835
+                         the biggest misinformation purveyors
+      5  France 24       French government launches battle plan    https://www.france24.com/en/france/20230  2023-09-29 13:57:54               1           282
+                         against bedbug invasion                   929-french-government-launches-battle-
+                                                                   plan-against-bedbug-invasion
+      4  Ars Technica    US agency sues Tesla as Black workers     https://arstechnica.com/?p=1972215        2023-09-30 11:57:17               7          1577
+                         report “swastikas, threats, and noose
+      3  Ars Technica    SCOTUS to decide if Florida and Texas     https://arstechnica.com/?p=1972299        2023-09-30 11:58:17               7          1551
+                         social media laws violate 1st Amendme
+      2  Ars Technica    “No choice at all”: Pharma companies      https://arstechnica.com/?p=1972343        2023-09-30 11:58:29               3           694
+                         begrudgingly agree to negotiate prices
+      1  Ars Technica    DOJ finally posted that “embarrassing”    https://arstechnica.com/?p=1972364        2023-09-30 11:58:37               3           538
+                         court doc Google wanted to hide
+-------  --------------  ----------------------------------------  ----------------------------------------  -------------------  --------------  ------------
+  Index  Domain Name     Title                                     URL                                       Added                  Time to Read    Word Count
 
-[v]iew <index>  |  [d]elete <index>  |  [vd] <index>  |  [u]pdate  |  [f]ilter  |  [q]uit >
+[v]iew <index>  |  [d]elete <index>  |  [vd] <index>  |  [u]pdate  |  [f]ilter  |  [s]ort  |  [t]ag  |  [q]uit >
 ```
 
 # Ideas/Bugs
