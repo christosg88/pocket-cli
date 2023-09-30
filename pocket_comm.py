@@ -4,6 +4,7 @@ import json
 import requests
 import subprocess as sp
 import sys
+import itertools
 
 
 class PocketItem:
@@ -41,6 +42,11 @@ class PocketItem:
     def get_time_to_read(word_count: int):
         return int(round(word_count / PocketItem.WORDS_PER_MINUTE))
 
+    def get_grouped_time_to_read(self):
+        for limit in itertools.chain((1, 2), range(5, 1000, 5)):
+            if self.time_to_read <= limit:
+                return limit
+
 
 class Pocket:
     POCKET_ACCESS_TOKEN_FILE = Path.home() / ".pocket"
@@ -52,6 +58,7 @@ class Pocket:
         self.access_token = None
         self.username = None
         self.items = dict()
+        self.batched_actions = []
 
     def authenticate(self):
         self.access_token, self.username = self.get_access_token_and_username()
@@ -69,6 +76,29 @@ class Pocket:
                 file=sys.stderr,
             )
             raise RuntimeError(pformat(dict(r.headers)))
+        return r.json()
+
+    def send_batched_requests(self) -> None:
+        batched_send_requests = {
+            "consumer_key": Pocket.CONSUMER_KEY,
+            "access_token": self.access_token,
+            "actions": self.batched_actions,
+        }
+        r = requests.post(
+            "https://getpocket.com/v3/send",
+            headers={
+                "Content-Type": "application/json; charset=UTF-8",
+                "X-Accept": "application/json",
+            },
+            json=batched_send_requests,
+        )
+        if r.status_code != 200:
+            print(
+                f"Request failed with status code {r.status_code}",
+                file=sys.stderr,
+            )
+            raise RuntimeError(pformat(dict(r.headers)))
+        self.batched_actions.clear()
         return r.json()
 
     def get_access_token_and_username(self) -> tuple[str, str]:
@@ -199,3 +229,25 @@ class Pocket:
             "actions": [{"action": "delete", "item_id": item_id}],
         }
         self.send_request("v3/send", data)
+
+    def request_tags_add(self, item_id: str, tags: str):
+        """
+        Add one or more tags to an item.
+
+        item_id: The id of the item to perform the action on.
+        tags: A comma-delimited list of one or more tags.
+        """
+
+        self.batched_actions.append(
+            {"action": "tags_add", "item_id": item_id, "tags": tags}
+        )
+
+    def request_tags_clear(self, item_id: str):
+        """
+        Remove all tags from an item.
+
+        item_id: The id of the item to perform the action on.
+        tags: A comma-delimited list of one or more tags.
+        """
+
+        self.batched_actions.append({"action": "tags_clear", "item_id": item_id})

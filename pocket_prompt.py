@@ -14,6 +14,7 @@ class PocketPrompt:
         "u": "[u]pdate",
         "f": "[f]ilter",
         "s": "[s]ort",
+        "t": "[t]ag",
         "q": "[q]uit",
     }
 
@@ -139,7 +140,7 @@ class PocketPrompt:
                 continue
             if tokens[0] not in PocketPrompt.valid_commands.keys():
                 continue
-            if tokens[0] in ("q", "u", "f", "s") and len(tokens) != 1:
+            if tokens[0] in ("q", "u", "f", "s", "t") and len(tokens) != 1:
                 continue
             if tokens[0] in ("v", "d", "vd") and len(tokens) != 2:
                 continue
@@ -169,6 +170,8 @@ class PocketPrompt:
                     self.prompt_sort()
                     self.display()
                     continue
+                case "t":
+                    self.update_tags()
                 case _:
                     idx = int(tokens[1])
 
@@ -202,3 +205,14 @@ class PocketPrompt:
                             self.pocket.request_delete(item_id)
                             del self.items[item_id]
                             self.display()
+
+    def update_tags(self):
+        for item_id in self.items.keys():
+            self.pocket.request_tags_clear(item_id)
+
+        for item_id, item in self.items.items():
+            self.pocket.request_tags_add(
+                item_id, f"{item.get_grouped_time_to_read()}-min"
+            )
+
+        self.pocket.send_batched_requests()
