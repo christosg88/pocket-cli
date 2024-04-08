@@ -5,6 +5,7 @@ import requests
 import subprocess as sp
 import sys
 import itertools
+from starter_program import OPEN_COMMAND
 
 
 class PocketItem:
@@ -126,7 +127,7 @@ class Pocket:
     def redirect_to_authorization(self, request_token):
         sp.run(
             [
-                "xdg-open",
+                OPEN_COMMAND,
                 (
                     "https://getpocket.com/auth/authorize"
                     f"?request_token={request_token}"
