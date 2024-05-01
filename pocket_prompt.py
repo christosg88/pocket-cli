@@ -1,9 +1,15 @@
-from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pocket_comm import PocketItem, Pocket
-from tabulate import tabulate
 import readline
+import shutil
 import subprocess as sp
+from tabulate import tabulate
+
+
+def get_trimmed(s: str, max_len: int) -> str:
+    if len(s) > max_len:
+        return s[:max_len]
+    return s
 
 
 class PocketPrompt:
@@ -20,7 +26,7 @@ class PocketPrompt:
 
     def __init__(self, pocket: Pocket):
         self.pocket: Pocket = pocket
-        self.items: dict[str, PocketItem] = None
+        self.items: dict[str, PocketItem] = {}
         self.sort_by = 1
 
     def update(self):
@@ -45,6 +51,9 @@ class PocketPrompt:
             idx += 1
 
     def display(self):
+        if len(self.items) == 0:
+            return
+
         match self.sort_by:
             case 1:
                 self.sort_by_time_added()
@@ -55,32 +64,61 @@ class PocketPrompt:
             case 4:
                 self.sort_by_time_to_read(reverse=True)
 
-        to_print = tabulate(
-            [
-                (
-                    item.sort_idx,
-                    item.domain_name,
-                    item.given_title,
-                    item.given_url,
-                    datetime.fromtimestamp(item.time_added),
-                    item.time_to_read,
-                    item.word_count,
-                )
-                for item in sorted(
-                    self.items.values(), key=lambda item: item.sort_idx, reverse=True
-                )
-            ],
-            headers=(
-                "Index",
-                "Domain Name",
-                "Title",
-                "URL",
-                "Added",
-                "Time to Read",
-                "Word Count",
-            ),
-            maxcolwidths=40,
+        headers = (
+            "Index",
+            "Domain Name",
+            "Title",
+            "URL",
+            "Added",
+            "Time to Read",
+            "Word Count",
         )
+
+        items = [(
+            item.sort_idx,
+            item.domain_name,
+            item.given_title,
+            item.given_url,
+            datetime.fromtimestamp(item.time_added),
+            item.time_to_read,
+            item.word_count,
+        ) for item in sorted(
+            self.items.values(), key=lambda item: item.sort_idx, reverse=True)]
+
+        num_columns = len(headers)
+        max_len = [len(header) + 4 for header in headers]
+        max_len[0] -= 1
+        max_len[-1] -= 1
+        for item in items:
+            for i in (0, num_columns - 1):
+                length = len(str(item[i])) + 1
+                if max_len[i] < length:
+                    max_len[i] = length
+
+            for i in range(1, num_columns - 1):
+                length = len(str(item[i])) + 2
+                if max_len[i] < length:
+                    max_len[i] = length
+
+        term_cols, _ = shutil.get_terminal_size()
+        remaining = term_cols - sum(max_len[:2]) - sum(max_len[4:]) - 4
+        title_cols = min(max_len[2] - 2, remaining * 4 // 5)
+        url_cols = remaining - title_cols
+        max_len[2] = title_cols
+        max_len[3] = url_cols
+        for i in range(len(items)):
+            item = items[i]
+            items[i] = (
+                item[0],
+                item[1],
+                get_trimmed(item[2], title_cols),
+                get_trimmed(item[3], url_cols),
+                item[4],
+                item[5],
+                item[6],
+            )
+
+        to_print = tabulate(items, headers=headers)
         lines = to_print.split("\n")
         print(to_print)
         print(lines[1])
