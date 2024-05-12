@@ -13,7 +13,7 @@ class PocketPrompt:
         "v": "[v]iew <index>",
         "d": "[d]elete <index>",
         "da": "[d]elete [a]ll",
-        ".": "domains",
+        ".": "[.] domains",
         "vd": "[vd] <index>",
         "u": "[u]pdate",
         "l": "by [l]ength",
@@ -109,33 +109,27 @@ class PocketPrompt:
         for item in self.items.values():
             domain = urlparse(item.given_url).hostname
             domains[domain] += 1
-
-        repeated_domains = {}
-        for domain in domains.keys():
-            if domains[domain] > 1:
-                repeated_domains[domain] = domains[domain]
+        domains = list(domains.items())
 
         while True:
+            for idx, (domain, count) in enumerate(domains, start=1):
+                print(f"{idx}. {count}: {domain}")
             try:
-                for domain, count in repeated_domains.items():
-                    print(f"{count}: {domain}")
-                group_idx = int(input("> "))
-                if 1 <= group_idx <= len(groups):
+                domain_idx = int(input("> "))
+                if 1 <= domain_idx <= len(domains):
+                    filter_domain = domains[domain_idx - 1][0]
                     break
+                raise ValueError
             except ValueError:
+                print("Invalid index\n")
                 pass
-
-        min_time_to_read = groups[group_idx - 1] * 5
-        max_time_to_read = (groups[group_idx - 1] + 1) * 5
 
         self.items = dict(
             filter(
-                lambda pair: min_time_to_read
-                <= pair[1].time_to_read
-                < max_time_to_read,
+                lambda pair: urlparse(pair[1].given_url).hostname ==
+                filter_domain,
                 self.items.items(),
-            )
-        )
+            ))
 
 
     def prompt_length(self):
