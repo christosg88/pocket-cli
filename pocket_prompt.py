@@ -6,6 +6,12 @@ import subprocess as sp
 from urllib.parse import urlparse
 from starter_program import OPEN_COMMAND
 from tabulate import tabulate
+from collections import defaultdict
+
+def get_trimmed(s: str, max_len: int) -> str:
+    if len(s) > max_len:
+        return s[:max_len]
+    return s
 
 
 class PocketPrompt:
@@ -159,7 +165,6 @@ class PocketPrompt:
                 filter_domain,
                 self.items.items(),
             ))
-
 
     def prompt_length(self):
         # show possible groups of 5 minutes increment
