@@ -3,22 +3,21 @@ from pocket_comm import PocketItem, Pocket
 import readline
 import shutil
 import subprocess as sp
+from urllib.parse import urlparse
+from starter_program import OPEN_COMMAND
 from tabulate import tabulate
-
-
-def get_trimmed(s: str, max_len: int) -> str:
-    if len(s) > max_len:
-        return s[:max_len]
-    return s
 
 
 class PocketPrompt:
     valid_commands = {
         "v": "[v]iew <index>",
         "d": "[d]elete <index>",
+        "da": "[d]elete [a]ll",
+        ".": "[.] domains",
         "vd": "[vd] <index>",
         "u": "[u]pdate",
-        "f": "[f]ilter",
+        "l": "by [l]ength",
+        "f": "[f]ilter <keyword>",
         "s": "[s]ort",
         "t": "[t]ag",
         "q": "[q]uit",
@@ -51,7 +50,8 @@ class PocketPrompt:
             idx += 1
 
     def display(self):
-        if len(self.items) == 0:
+        if not self.items or len(self.items) == 0:
+            print("\n\nNo items found\n\n")
             return
 
         match self.sort_by:
@@ -125,7 +125,43 @@ class PocketPrompt:
         print(lines[0])
         print()
 
-    def prompt_filter(self):
+    def prompt_filter(self, match):
+        self.items = dict(
+            filter(
+                lambda pair: match in pair[1].given_url or match in pair[1].given_title,
+                self.items.items(),
+            )
+        )
+
+    def prompt_domains(self):
+        domains = defaultdict(int)
+        for item in self.items.values():
+            domain = urlparse(item.given_url).hostname
+            domains[domain] += 1
+        domains = list(domains.items())
+
+        while True:
+            for idx, (domain, count) in enumerate(domains, start=1):
+                print(f"{idx}. {count}: {domain}")
+            try:
+                domain_idx = int(input("> "))
+                if 1 <= domain_idx <= len(domains):
+                    filter_domain = domains[domain_idx - 1][0]
+                    break
+                raise ValueError
+            except ValueError:
+                print("Invalid index\n")
+                pass
+
+        self.items = dict(
+            filter(
+                lambda pair: urlparse(pair[1].given_url).hostname ==
+                filter_domain,
+                self.items.items(),
+            ))
+
+
+    def prompt_length(self):
         # show possible groups of 5 minutes increment
         groups: set[int] = set()
         for item in self.items.values():
@@ -178,9 +214,9 @@ class PocketPrompt:
                 continue
             if tokens[0] not in PocketPrompt.valid_commands.keys():
                 continue
-            if tokens[0] in ("q", "u", "f", "s", "t") and len(tokens) != 1:
+            if tokens[0] in ("q", "u", "l", "s", "t") and len(tokens) != 1:
                 continue
-            if tokens[0] in ("v", "d", "vd") and len(tokens) != 2:
+            if tokens[0] in ("v", "d", "vd", "f") and len(tokens) != 2:
                 continue
 
             return tokens
@@ -200,8 +236,19 @@ class PocketPrompt:
                     self.update()
                     self.display()
                     continue
+                case "l":
+                    self.prompt_length()
+                    self.display()
+                    continue
+                case ".":
+                    self.prompt_domains()
+                    self.display()
+                    continue
                 case "f":
-                    self.prompt_filter()
+                    match = tokens[1]
+                    self.update()
+                    if match:
+                        self.prompt_filter(match)
                     self.display()
                     continue
                 case "s":
@@ -210,6 +257,12 @@ class PocketPrompt:
                     continue
                 case "t":
                     self.update_tags()
+                case "da":
+                    for item_id in self.items.keys():
+                        self.pocket.request_delete(item_id)
+                    self.update()
+                    self.display()
+                    continue
                 case _:
                     idx = int(tokens[1])
 
@@ -226,7 +279,7 @@ class PocketPrompt:
                     match cmd:
                         case "v":
                             sp.Popen(
-                                ["xdg-open", self.items[item_id].given_url],
+                                [OPEN_COMMAND, self.items[item_id].given_url],
                                 stdout=sp.DEVNULL,
                                 stderr=sp.DEVNULL,
                             )
@@ -236,7 +289,7 @@ class PocketPrompt:
                             self.display()
                         case "vd":
                             sp.Popen(
-                                ["xdg-open", self.items[item_id].given_url],
+                                [OPEN_COMMAND, self.items[item_id].given_url],
                                 stdout=sp.DEVNULL,
                                 stderr=sp.DEVNULL,
                             )
