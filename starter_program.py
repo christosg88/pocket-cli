@@ -8,4 +8,4 @@ elif sys.platform.startswith("windows"):
 elif sys.platform == "darwin":
     OPEN_COMMAND = "open"
 else:
-    raise NotImplemented(f"We do not know how to open URLs in {sys.platform} platform")
+    raise NotImplementedError(f"We do not know how to open URLs in {sys.platform} platform")
