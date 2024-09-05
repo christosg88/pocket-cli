@@ -144,6 +144,52 @@ class Pocket:
         }
         return self.send_request("v3/oauth/authorize", data)
 
+    def validate_and_get_data(
+        self,
+        state=None,
+        favorite=None,
+        tag=None,
+        content_type=None,
+        sort=None,
+        detail_type=None,
+        search=None,
+        domain=None,
+        since=None,
+        count=None,
+        offset=None,
+    ) -> dict[str, str]:
+        data = {"consumer_key": Pocket.CONSUMER_KEY, "access_token": self.access_token}
+        if state:
+            assert state in ("unread", "archive", "all")
+            data["state"] = state
+        if favorite:
+            assert favorite in ("0", "1")
+            data["favorite"] = favorite
+        if tag:
+            data["tag"] = tag
+        if content_type:
+            assert content_type in ("article", "video", "image")
+            data["contentType"] = content_type
+        if sort:
+            assert state in ("newest", "oldest", "title", "site")
+            data["sort"] = sort
+        if detail_type:
+            assert detail_type in ("simple", "complete")
+            data["detailType"] = detail_type
+        if search:
+            data["search"] = search
+        if domain:
+            data["domain"] = domain
+        if since:
+            data["since"] = since
+        if count:
+            assert int(count) > 0
+            data["count"] = count
+        if offset:
+            assert int(offset) > 0
+            data["offset"] = offset
+        return data
+
     def retrieve(
         self,
         state=None,
@@ -158,52 +204,12 @@ class Pocket:
         count=None,
         offset=None,
     ) -> dict[str, PocketItem]:
-        data = {"consumer_key": Pocket.CONSUMER_KEY, "access_token": self.access_token}
-        if state:
-            if state not in ("unread", "archive", "all"):
-                raise RuntimeError(
-                    f"Invalid option {state=} (valid options: unread, archive, all)"
-                )
-            data["state"] = state
-        if favorite:
-            if favorite not in ("0", "1"):
-                raise RuntimeError(f"Invalid option {favorite=} (valid options: 0, 1)")
-            data["favorite"] = favorite
-        if tag:
-            data["tag"] = tag
-        if content_type:
-            if content_type not in ("article", "video", "image"):
-                raise RuntimeError(
-                    f"Invalid option {content_type=} (valid options: article, video, image)"
-                )
-            data["contentType"] = content_type
-        if sort:
-            if state not in ("newest", "oldest", "title", "site"):
-                raise RuntimeError(
-                    f"Invalid option {sort=} (valid options: newest, oldest, title, site)"
-                )
-            data["sort"] = sort
-        if detail_type:
-            if detail_type not in ("simple", "complete"):
-                raise RuntimeError(
-                    f"Invalid option {detail_type=} (valid optiond: simple, complete)"
-                )
-            data["detailType"] = detail_type
-        if search:
-            data["search"] = search
-        if domain:
-            data["domain"] = domain
-        if since:
-            data["since"] = since
-        if count:
-            if int(count) < 1:
-                raise RuntimeError(f"Invalid option {count=} (valid options: > 0)")
-            data["count"] = count
-        if offset:
-            if int(offset) < 1:
-                raise RuntimeError(f"Invalid option {offset=} (valid options: > 0)")
-            data["offset"] = offset
-
+        """
+        Return a dictionary with key the item_id (from unique ID comming from Pocket) and value a PocketItem
+        """
+        data = self.validate_and_get_data(
+            state, favorite, tag, content_type, sort, detail_type, search, domain, since, count, offset
+        )
         r_json = self.send_request("v3/get", data)
 
         if not r_json["list"]:
@@ -239,9 +245,7 @@ class Pocket:
         tags: A comma-delimited list of one or more tags.
         """
 
-        self.batched_actions.append(
-            {"action": "tags_add", "item_id": item_id, "tags": tags}
-        )
+        self.batched_actions.append({"action": "tags_add", "item_id": item_id, "tags": tags})
 
     def request_tags_clear(self, item_id: str):
         """

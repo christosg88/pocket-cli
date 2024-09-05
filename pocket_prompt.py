@@ -8,6 +8,7 @@ from starter_program import OPEN_COMMAND
 from tabulate import tabulate
 from collections import defaultdict
 
+
 def get_trimmed(s: str, max_len: int) -> str:
     if len(s) > max_len:
         return s[:max_len]
@@ -41,17 +42,13 @@ class PocketPrompt:
 
     def sort_by_time_added(self, reverse=False) -> None:
         idx = 1
-        for item in sorted(
-            self.items.values(), key=lambda item: item.time_added, reverse=reverse
-        ):
+        for item in sorted(self.items.values(), key=lambda item: item.time_added, reverse=reverse):
             item.sort_idx = idx
             idx += 1
 
     def sort_by_time_to_read(self, reverse=False) -> None:
         idx = 1
-        for item in sorted(
-            self.items.values(), key=lambda item: item.time_to_read, reverse=reverse
-        ):
+        for item in sorted(self.items.values(), key=lambda item: item.time_to_read, reverse=reverse):
             item.sort_idx = idx
             idx += 1
 
@@ -80,16 +77,18 @@ class PocketPrompt:
             "Word Count",
         )
 
-        items = [(
-            item.sort_idx,
-            item.domain_name,
-            item.given_title,
-            item.given_url,
-            datetime.fromtimestamp(item.time_added),
-            item.time_to_read,
-            item.word_count,
-        ) for item in sorted(
-            self.items.values(), key=lambda item: item.sort_idx, reverse=True)]
+        items = [
+            (
+                item.sort_idx,
+                item.domain_name,
+                item.given_title,
+                item.given_url,
+                datetime.fromtimestamp(item.time_added),
+                item.time_to_read,
+                item.word_count,
+            )
+            for item in sorted(self.items.values(), key=lambda item: item.sort_idx, reverse=True)
+        ]
 
         num_columns = len(headers)
         max_len = [len(header) + 4 for header in headers]
@@ -161,10 +160,10 @@ class PocketPrompt:
 
         self.items = dict(
             filter(
-                lambda pair: urlparse(pair[1].given_url).hostname ==
-                filter_domain,
+                lambda pair: urlparse(pair[1].given_url).hostname == filter_domain,
                 self.items.items(),
-            ))
+            )
+        )
 
     def prompt_length(self):
         # show possible groups of 5 minutes increment
@@ -188,9 +187,7 @@ class PocketPrompt:
 
         self.items = dict(
             filter(
-                lambda pair: min_time_to_read
-                <= pair[1].time_to_read
-                < max_time_to_read,
+                lambda pair: min_time_to_read <= pair[1].time_to_read < max_time_to_read,
                 self.items.items(),
             )
         )
@@ -211,9 +208,7 @@ class PocketPrompt:
 
     def get_cmd_and_idx(self):
         while True:
-            tokens = input(
-                "  |  ".join(PocketPrompt.valid_commands.values()) + " > "
-            ).split()
+            tokens = input("  |  ".join(PocketPrompt.valid_commands.values()) + " > ").split()
 
             if not tokens:
                 continue
@@ -307,8 +302,6 @@ class PocketPrompt:
             self.pocket.request_tags_clear(item_id)
 
         for item_id, item in self.items.items():
-            self.pocket.request_tags_add(
-                item_id, f"{item.get_grouped_time_to_read()}-min"
-            )
+            self.pocket.request_tags_add(item_id, f"{item.get_grouped_time_to_read()}-min")
 
         self.pocket.send_batched_requests()
